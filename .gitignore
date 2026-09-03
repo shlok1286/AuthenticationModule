@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!.env.example
+backend/dist/
+frontend/public/bundle.js
+frontend/public/bundle.js.map
+frontend/public/bundle.css
+frontend/public/bundle.css.map

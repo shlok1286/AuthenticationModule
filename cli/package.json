@@ -1,0 +1,14 @@
+{
+  "name": "auth12",
+  "version": "1.0.0",
+  "description": "Generate a MongoDB authentication-ready React and Express project.",
+  "type": "module",
+  "bin": {
+    "auth12": "./src/index.js"
+  },
+  "files": ["src", "templates", "README.md"],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

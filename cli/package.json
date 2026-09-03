@@ -4,7 +4,7 @@
   "description": "Generate a MongoDB authentication-ready React and Express project.",
   "type": "module",
   "bin": {
-    "auth12": "./src/index.js"
+    "auth12": "src/index.js"
   },
   "files": ["src", "templates", "README.md"],
   "engines": {

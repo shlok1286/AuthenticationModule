@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
 import type { UserProfile } from "../services/api";
 
@@ -7,7 +7,7 @@ interface AuthContextType {
   pendingEmail: string;
   setPendingEmail: (email: string) => void;
   loading: boolean;
-  fetchUser: () => Promise<void>;
+  fetchUser: () => Promise<UserProfile | null>;
   logout: () => Promise<void>;
 }
 
@@ -17,19 +17,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const sessionRequestId = useRef(0);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async (): Promise<UserProfile | null> => {
+    const requestId = ++sessionRequestId.current;
+
     try {
       const response = await api.get<{ user: UserProfile }>("/api/auth/me");
-      setUser(response.data.user);
+      const authenticatedUser = response.data.user;
+
+      if (requestId === sessionRequestId.current) {
+        setUser(authenticatedUser);
+        setLoading(false);
+      }
+
+      return authenticatedUser;
     } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
+      if (requestId === sessionRequestId.current) {
+        setUser(null);
+        setLoading(false);
+      }
+
+      return null;
     }
-  };
+  }, []);
 
   const logout = async () => {
+    // Ignore any in-flight session lookup that began before logout.
+    sessionRequestId.current += 1;
+
     try {
       await api.post("/api/auth/logout");
     } finally {
@@ -39,8 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    fetchUser();
-  }, []);
+    void fetchUser();
+  }, [fetchUser]);
 
   return (
     <AuthContext.Provider

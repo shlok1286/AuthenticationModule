@@ -13,13 +13,14 @@ const maskEmail = (email: string): string => {
 };
 
 export const Verify: React.FC = () => {
-  const { pendingEmail, fetchUser } = useAuth();
+  const { pendingEmail, fetchUser, user } = useAuth();
   const navigate = useNavigate();
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [readyForSuccess, setReadyForSuccess] = useState(false);
 
   const [resendTimer, setResendTimer] = useState<number>(45);
   const [canResend, setCanResend] = useState<boolean>(false);
@@ -37,6 +38,12 @@ export const Verify: React.FC = () => {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
+  useEffect(() => {
+    if (readyForSuccess && user) {
+      navigate("/success", { replace: true });
+    }
+  }, [navigate, readyForSuccess, user]);
+
   const handleVerify = async (codeToVerify?: string) => {
     const finalOtp = codeToVerify || otp;
     setError("");
@@ -53,13 +60,15 @@ export const Verify: React.FC = () => {
         otp: finalOtp,
       });
 
+      const authenticatedUser = await fetchUser();
+      if (!authenticatedUser) {
+        throw new Error("Your session could not be confirmed. Please sign in again.");
+      }
+
       setSuccess(true);
-      await fetchUser();
-      setTimeout(() => {
-        navigate("/success");
-      }, 500);
+      setReadyForSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid or expired verification code.");
+      setError(err.response?.data?.message || err.message || "Invalid or expired verification code.");
     } finally {
       setIsVerifying(false);
     }

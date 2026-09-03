@@ -28413,17 +28413,27 @@ var AuthProvider = ({ children }) => {
   const [user, setUser] = (0, import_react.useState)(null);
   const [pendingEmail, setPendingEmail] = (0, import_react.useState)("");
   const [loading, setLoading] = (0, import_react.useState)(true);
-  const fetchUser = async () => {
+  const sessionRequestId = (0, import_react.useRef)(0);
+  const fetchUser = (0, import_react.useCallback)(async () => {
+    const requestId = ++sessionRequestId.current;
     try {
       const response = await api.get("/api/auth/me");
-      setUser(response.data.user);
+      const authenticatedUser = response.data.user;
+      if (requestId === sessionRequestId.current) {
+        setUser(authenticatedUser);
+        setLoading(false);
+      }
+      return authenticatedUser;
     } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
+      if (requestId === sessionRequestId.current) {
+        setUser(null);
+        setLoading(false);
+      }
+      return null;
     }
-  };
+  }, []);
   const logout = async () => {
+    sessionRequestId.current += 1;
     try {
       await api.post("/api/auth/logout");
     } finally {
@@ -28432,8 +28442,8 @@ var AuthProvider = ({ children }) => {
     }
   };
   (0, import_react.useEffect)(() => {
-    fetchUser();
-  }, []);
+    void fetchUser();
+  }, [fetchUser]);
   return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
     AuthContext.Provider,
     {
@@ -28600,12 +28610,9 @@ var createLucideIcon = (iconName, iconNode) => {
   return Component6;
 };
 
-// node_modules/lucide-react/dist/esm/icons/circle-check.mjs
-var __iconNode = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m16 9-5.5 5.5L8 12", key: "xofnsj" }]
-];
-var CircleCheck = createLucideIcon("circle-check", __iconNode);
+// node_modules/lucide-react/dist/esm/icons/check.mjs
+var __iconNode = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+var Check = createLucideIcon("check", __iconNode);
 
 // node_modules/lucide-react/dist/esm/icons/eye.mjs
 var __iconNode2 = [
@@ -28649,15 +28656,8 @@ var __iconNode4 = [
 ];
 var MailCheck = createLucideIcon("mail-check", __iconNode4);
 
-// node_modules/lucide-react/dist/esm/icons/mail.mjs
-var __iconNode5 = [
-  ["path", { d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7", key: "132q7q" }],
-  ["rect", { x: "2", y: "4", width: "20", height: "16", rx: "2", key: "izxlao" }]
-];
-var Mail = createLucideIcon("mail", __iconNode5);
-
 // node_modules/lucide-react/dist/esm/icons/shield-check.mjs
-var __iconNode6 = [
+var __iconNode5 = [
   [
     "path",
     {
@@ -28667,22 +28667,10 @@ var __iconNode6 = [
   ],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-var ShieldCheck = createLucideIcon("shield-check", __iconNode6);
-
-// node_modules/lucide-react/dist/esm/icons/shield.mjs
-var __iconNode7 = [
-  [
-    "path",
-    {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
-    }
-  ]
-];
-var Shield = createLucideIcon("shield", __iconNode7);
+var ShieldCheck = createLucideIcon("shield-check", __iconNode5);
 
 // node_modules/lucide-react/dist/esm/icons/sparkles.mjs
-var __iconNode8 = [
+var __iconNode6 = [
   [
     "path",
     {
@@ -28694,14 +28682,7 @@ var __iconNode8 = [
   ["path", { d: "M22 4h-4", key: "gwowj6" }],
   ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
 ];
-var Sparkles = createLucideIcon("sparkles", __iconNode8);
-
-// node_modules/lucide-react/dist/esm/icons/user.mjs
-var __iconNode9 = [
-  ["path", { d: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2", key: "975kel" }],
-  ["circle", { cx: "12", cy: "7", r: "4", key: "17ys0d" }]
-];
-var User = createLucideIcon("user", __iconNode9);
+var Sparkles = createLucideIcon("sparkles", __iconNode6);
 
 // src/components/auth/PromoPanel.tsx
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
@@ -38070,12 +38051,13 @@ var maskEmail = (email) => {
   return `${local.slice(0, 1)}\u2022\u2022\u2022\u2022\u2022${local.slice(-1)}@${domain}`;
 };
 var Verify = () => {
-  const { pendingEmail, fetchUser } = useAuth();
+  const { pendingEmail, fetchUser, user } = useAuth();
   const navigate = useNavigate();
   const [otp, setOtp] = (0, import_react34.useState)("");
   const [error, setError] = (0, import_react34.useState)("");
   const [success, setSuccess] = (0, import_react34.useState)(false);
   const [isVerifying, setIsVerifying] = (0, import_react34.useState)(false);
+  const [readyForSuccess, setReadyForSuccess] = (0, import_react34.useState)(false);
   const [resendTimer, setResendTimer] = (0, import_react34.useState)(45);
   const [canResend, setCanResend] = (0, import_react34.useState)(false);
   const [resendMessage, setResendMessage] = (0, import_react34.useState)("");
@@ -38090,6 +38072,11 @@ var Verify = () => {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
+  (0, import_react34.useEffect)(() => {
+    if (readyForSuccess && user) {
+      navigate("/success", { replace: true });
+    }
+  }, [navigate, readyForSuccess, user]);
   const handleVerify = async (codeToVerify) => {
     const finalOtp = codeToVerify || otp;
     setError("");
@@ -38103,13 +38090,14 @@ var Verify = () => {
         email: pendingEmail,
         otp: finalOtp
       });
+      const authenticatedUser = await fetchUser();
+      if (!authenticatedUser) {
+        throw new Error("Your session could not be confirmed. Please sign in again.");
+      }
       setSuccess(true);
-      await fetchUser();
-      setTimeout(() => {
-        navigate("/success");
-      }, 500);
+      setReadyForSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid or expired verification code.");
+      setError(err.response?.data?.message || err.message || "Invalid or expired verification code.");
     } finally {
       setIsVerifying(false);
     }
@@ -38391,7 +38379,7 @@ var Success = () => {
   const navigate = useNavigate();
   (0, import_react37.useEffect)(() => {
     if (!loading && !user) {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   }, [user, loading, navigate]);
   if (loading) {
@@ -38402,39 +38390,28 @@ var Success = () => {
   }
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
-  const handleContinue = () => {
-    alert("Authentication complete. You can now redirect users to your dashboard or application.");
-  };
-  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(AuthLayout, { showPromo: true, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex flex-col items-center justify-center text-center w-full py-2", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: "w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-5 shadow-2xs", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(CircleCheck, { size: 28, strokeWidth: 2.2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "mb-6", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("h1", { className: "text-[26px] sm:text-[28px] font-bold tracking-tight text-[#111111]", children: "Successfully authenticated" }),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[14px] text-[#6B7280] mt-1.5 max-w-xs mx-auto", children: "You are now securely signed in to your account." })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "w-full bg-[#FAFAFA] border border-[#E5E7EB] rounded-[10px] p-4 text-left mb-6 space-y-2.5", children: [
-      user.name && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center gap-2.5 text-[13px] text-[#374151]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(User, { size: 15, className: "text-[#9CA3AF] shrink-0" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "font-semibold text-[#111111]", children: user.name })
-      ] }),
-      user.email && /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center gap-2.5 text-[13px] text-[#374151]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Mail, { size: 15, className: "text-[#9CA3AF] shrink-0" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "text-[#4B5563]", children: user.email })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex items-center gap-2.5 text-[12px] text-[#059669] pt-1 border-t border-[#E5E7EB]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Shield, { size: 14, className: "text-[#059669] shrink-0" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: "font-medium", children: "Active secure session" })
-      ] })
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(AuthLayout, { showPromo: true, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex w-full flex-col items-center justify-center py-2 text-center", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      "div",
+      {
+        "aria-hidden": "true",
+        className: "mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600",
+        children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Check, { size: 29, strokeWidth: 2.4 })
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "mb-7", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("h1", { className: "text-[26px] sm:text-[28px] font-bold tracking-tight text-[#111111]", children: "Successfully Logged In" }),
+      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: "text-[14px] text-[#6B7280] mt-1.5 max-w-xs mx-auto", children: "You have successfully logged in to your account." })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: "flex flex-col gap-3 w-full", children: [
       /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
         "button",
         {
           type: "button",
-          onClick: handleContinue,
           className: "w-full h-[48px] bg-[#111111] hover:bg-[#262626] active:bg-black text-white font-semibold text-[14px] rounded-[8px] transition-colors duration-150 shadow-xs flex items-center justify-center cursor-pointer",
-          children: "Continue to dashboard"
+          children: "Continue"
         }
       ),
       /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
@@ -38443,7 +38420,7 @@ var Success = () => {
           type: "button",
           onClick: handleLogout,
           className: "w-full h-[48px] bg-white hover:bg-[#F9FAFB] active:bg-[#F3F4F6] border border-[#E5E7EB] hover:border-[#D1D5DB] text-[#374151] font-semibold text-[14px] rounded-[8px] transition-colors duration-150 flex items-center justify-center cursor-pointer",
-          children: "Sign out"
+          children: "Log out"
         }
       )
     ] })
@@ -38550,15 +38527,12 @@ lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs:
 lucide-react/dist/esm/context.mjs:
 lucide-react/dist/esm/Icon.mjs:
 lucide-react/dist/esm/createLucideIcon.mjs:
-lucide-react/dist/esm/icons/circle-check.mjs:
+lucide-react/dist/esm/icons/check.mjs:
 lucide-react/dist/esm/icons/eye.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/mail-check.mjs:
-lucide-react/dist/esm/icons/mail.mjs:
 lucide-react/dist/esm/icons/shield-check.mjs:
-lucide-react/dist/esm/icons/shield.mjs:
 lucide-react/dist/esm/icons/sparkles.mjs:
-lucide-react/dist/esm/icons/user.mjs:
 lucide-react/dist/esm/lucide-react.mjs:
   (**
    * @license lucide-react v1.37.0 - ISC

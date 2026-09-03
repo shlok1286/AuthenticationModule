@@ -7,10 +7,11 @@ import { OTP } from '../models/OTP';
 import { generateNumericOTP, hashOTP, compareOTP } from '../utils/otp';
 import { sendOTPEmail } from '../services/emailService';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_reusable_auth_module_2026_safe_key_32bytes';
+const getJwtSecret = (): string =>
+  process.env.JWT_SECRET || 'super_secret_jwt_key_reusable_auth_module_2026_safe_key_32bytes';
 
 const issueToken = (res: Response, userId: string) => {
-  const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId }, getJwtSecret(), { expiresIn: '7d' });
   res.cookie('auth_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

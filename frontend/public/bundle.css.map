@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/index.css"],
+  "sourcesContent": ["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n:root {\n  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n  --bg-primary: #ffffff;\n  --bg-secondary: #fafafa;\n  --text-primary: #111111;\n  --text-secondary: #6b7280;\n  --border-light: #e5e7eb;\n}\n\nbody {\n  background-color: #ffffff;\n  color: #111111;\n  font-family: var(--font-sans);\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n  margin: 0;\n  padding: 0;\n}\n\n* {\n  box-sizing: border-box;\n}\n\n::selection {\n  background-color: #111111;\n  color: #ffffff;\n}\n"],
+  "mappings": ";AAAA,UAAU;AACV,UAAU;AACV,UAAU;AAEV;AACE;AAAA,IAAa,OAAO;AAAA,IAAE,SAAS;AAAA,IAAE,aAAa;AAAA,IAAE,kBAAkB;AAAA,IAAE,UAAU;AAAA,IAAE,MAAM;AAAA,IAAE;AACxF,gBAAc;AACd,kBAAgB;AAChB,kBAAgB;AAChB,oBAAkB;AAClB,kBAAgB;AAClB;AAEA;AACE,oBAAkB;AAClB,SAAO;AACP,eAAa,IAAI;AACjB,0BAAwB;AACxB,2BAAyB;AACzB,UAAQ;AACR,WAAS;AACX;AAEA;AACE,cAAY;AACd;AAEA;AACE,oBAAkB;AAClB,SAAO;AACT;",
+  "names": []
+}

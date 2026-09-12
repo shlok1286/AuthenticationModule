@@ -1,145 +1,179 @@
 # auth12
 
-A CLI that generates a ready-to-use authentication project with **React, TypeScript, Express, and MongoDB**.
+A production-ready authentication generator and framework for **React, TypeScript, Express**, supporting both **MongoDB** (Mongoose) and **PostgreSQL** (Prisma ORM) via a database-agnostic repository layer.
+
+## Architecture
+
+```
+                    ┌──────────────────────────────┐
+                    │      Auth Controller /       │
+                    │   Routes & Auth Middleware   │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │      Auth Service Layer      │
+                    │   (Business Logic & Crypto)  │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │  Repository Interfaces / DTO │
+                    │  IUserRepository, IOTPRepo   │
+                    └──────────────┬───────────────┘
+                                   │
+              ┌────────────────────┴────────────────────┐
+              ▼                                         ▼
+ ┌────────────────────────┐                ┌────────────────────────┐
+ │  MongoDB Adapter       │                │  PostgreSQL Adapter    │
+ │  (Mongoose Models)     │                │  (Prisma ORM)          │
+ └────────────────────────┘                └────────────────────────┘
+```
+
+Authentication business logic is completely decoupled from database mechanics. Applications can switch between MongoDB and PostgreSQL at any time purely via environment variables.
+
+---
 
 ## Features
 
-- Email & password authentication
-- 6-digit email OTP verification
-- OTP expiration and attempt limits
-- OTP resend support
-- Google OAuth 2.0
-- Forgot & reset password
-- JWT authentication with HTTP-only cookies
-- Protected routes
-- Session validation
-- Logout
-- Responsive authentication UI
-- MongoDB & Mongoose
+* **Multi-Database Support**: MongoDB (Mongoose) and PostgreSQL (Prisma)
+* **Email & Password Authentication**: Secure bcrypt hashing
+* **6-digit Email OTP Verification**: Cryptographic hashing, expiration (5 mins), attempt limits (5 max), and resend cooldowns (45s)
+* **Google OAuth 2.0**: ID Token verification and profile reconciliation
+* **Forgot & Reset Password**: Secure tokenized OTP workflow
+* **JWT Authentication**: Encrypted session cookies with HTTP-only, secure, sameSite flags
+* **Protected Routes & Session Validation**: Database-agnostic `authenticateJwt` middleware
+* **Logout & Session Invalidation**: Secure cookie clearing
+* **Responsive UI**: React, TypeScript, Tailwind CSS, Motion animations
+* **Database Agnostic Repositories**: Clean interface abstractions (`IUserRepository`, `IOTPRepository`, `IDatabaseAdapter`)
 
-## Requirements
-
-- Node.js 18+
-- npm
-- MongoDB
+---
 
 ## Usage
 
-Create a new authentication-ready project:
+Create a new authentication project:
 
-    npx auth12
+```bash
+npx auth12
+```
 
-Or provide the project name directly:
+Or specify the project name and database directly:
 
-    npx auth12 my-auth-project
+```bash
+# Interactive selection
+npx auth12 my-auth-project
 
-To generate the project without installing dependencies:
+# Or direct flags
+npx auth12 my-auth-project --db=postgresql
+npx auth12 my-auth-project --db=mongodb
+```
 
-    npx auth12 my-auth-project --no-install
+The CLI creates:
 
-## Generated Project
+```text
+my-auth-project/
+├── frontend/
+├── backend/
+│   ├── prisma/
+│   │   └── schema.prisma
+│   └── src/
+│       ├── controllers/
+│       ├── db/
+│       │   ├── mongodb/
+│       │   └── postgres/
+│       ├── middleware/
+│       ├── models/
+│       ├── routes/
+│       ├── services/
+│       └── utils/
+├── .env.example
+├── .gitignore
+└── README.md
+```
 
-    my-auth-project/
-    ├── frontend/
-    ├── backend/
-    ├── .env.example
-    ├── .gitignore
-    └── README.md
+---
 
-## Setup
+## Database Configuration & Setup
 
-After generating the project:
+### 1. MongoDB Setup
 
-    cd my-auth-project
+Set in your `backend/.env`:
 
-Configure the environment variables using `.env.example`.
+```env
+DATABASE_PROVIDER=mongodb
+MONGODB_URI=mongodb://localhost:27017/authentication
+```
 
-You will need your own:
+Start the backend:
+```bash
+cd backend
+npm run dev
+```
 
-- MongoDB connection
-- JWT secret
-- Email credentials
-- Google OAuth credentials (optional)
+### 2. PostgreSQL Setup (via Prisma)
 
-Never commit `.env` files or private credentials.
+Set in your `backend/.env`:
 
-### Backend
+```env
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=postgresql://postgres:password@localhost:5432/authentication?schema=public
+```
 
-    cd backend
-    npm run dev
+Generate Prisma client & sync schema:
+```bash
+cd backend
+npx prisma generate
+npx prisma db push
+npm run dev
+```
 
-### Frontend
+### How to Switch Providers
 
-Open another terminal:
+To change database providers, simply update `DATABASE_PROVIDER` in `backend/.env`:
+* For MongoDB: `DATABASE_PROVIDER=mongodb`
+* For PostgreSQL: `DATABASE_PROVIDER=postgresql`
 
-    cd frontend
-    npm run dev
+Only the configured database adapter is initialized at startup.
 
-Default development URLs:
+---
 
-    Frontend: http://localhost:5173
-    Backend:  http://localhost:5000
+## Environment Variables
 
-## Authentication Flow
+| Variable | Description | Default / Example |
+| :--- | :--- | :--- |
+| `PORT` | Backend server port | `5000` |
+| `DATABASE_PROVIDER` | Database engine (`mongodb` or `postgresql`) | `mongodb` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/authentication` |
+| `DATABASE_URL` | PostgreSQL connection string for Prisma | `postgresql://user:pass@localhost:5432/auth` |
+| `JWT_SECRET` | Secret key for signing JWT tokens | 32+ character random string |
+| `GOOGLE_CLIENT_ID` | Google Cloud OAuth Client ID | `...apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth Client Secret | Secret from Google Console |
+| `EMAIL_USER` | Gmail address for sending OTP emails | `your-email@gmail.com` |
+| `EMAIL_APP_PASSWORD` | Google 16-character App Password | App password |
+| `FRONTEND_URL` | URL of the frontend application | `http://localhost:5173` |
+| `BACKEND_URL` | URL of the backend application | `http://localhost:5000` |
 
-    Signup / Login
-          ↓
-    Email OTP Verification
-          ↓
-    JWT Session
-          ↓
-    Protected Success Page
+---
 
-Google OAuth is also available as an alternative authentication method.
+## Testing
 
-## Security
+Run the automated multi-database test suite validating both MongoDB and PostgreSQL repositories and shared business logic:
 
-- Passwords hashed using bcrypt
-- OTPs securely hashed and time-limited
-- JWT stored in HTTP-only cookies
-- Protected authentication routes
-- Rate limiting
-- Helmet security headers
-- Environment-based configuration
+```bash
+cd backend
+npm run test:auth
+```
 
-> Never commit `.env` files or private credentials to your repository.
+---
 
-## Tech Stack
+## Local CLI Development
 
-**Frontend:** React · TypeScript · Vite · Tailwind CSS · React Router · Axios · Motion · Lucide React
-
-**Backend:** Node.js · Express · TypeScript · MongoDB · Mongoose · JWT · bcryptjs · Nodemailer
-
-## Local Development
-
-To work on the CLI from the repository:
-
-    cd cli
-    npm install
-    npm link
-    auth12
-
-For a quick generation test without installing dependencies:
-
-    auth12 test-project --no-install
-
-## npm Package
-
-`auth12` is publicly available on npm.
-
-Current version: **1.0.0**
-
-Run it directly with:
-
-    npx auth12
-
-No GitHub clone or `npm link` is required to use the published package.
+```bash
+cd cli
+npm link
+auth12 test-project --no-install
+```
 
 ## License
 
 MIT
-
----
-
-**auth12**  
-*Generate. Configure. Authenticate.*

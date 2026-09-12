@@ -1,19 +1,43 @@
 # auth12
 
-`auth12` generates a standalone React and Express authentication project backed by MongoDB.
+`auth12` generates a production-ready React and Express authentication project supporting both **MongoDB** (Mongoose) and **PostgreSQL** (Prisma ORM) via a database-agnostic repository layer.
 
-Run locally from this repository:
+## Usage
+
+Create a new authentication project:
+
+```bash
+npx auth12
+```
+
+Or provide the project name and database directly:
+
+```bash
+npx auth12 my-auth-project --db=postgresql
+# or
+npx auth12 my-auth-project --db=mongodb
+```
+
+## Features
+
+- Multi-database support: MongoDB & PostgreSQL (Prisma)
+- Email & password signup and login
+- Email 6-digit OTP verification with expiration and attempt limiting
+- Resend OTP with cooldown
+- Forgot-password and reset-password flows
+- Google OAuth 2.0 authentication
+- JWT session management via HTTP-only cookies
+- Protected routes and session validation
+- Responsive UI (React + Tailwind CSS + Motion)
+
+## Local Development
 
 ```bash
 cd cli
 npm link
-auth12
+auth12 test-project --no-install
 ```
 
-For a non-interactive local test:
+## License
 
-```bash
-auth12 my-auth-project --no-install
-```
-
-The generated project includes email/password authentication, email OTP verification, Google OAuth, password recovery, JWT HTTP-only cookies, session checks, logout, and a protected success page. Copy `.env.example` to `.env` and provide your own service credentials before starting it.
+MIT

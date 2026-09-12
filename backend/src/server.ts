@@ -1,17 +1,16 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes';
+import { initDatabase, getDatabaseAdapter, getDatabaseProvider } from './db';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/authentication';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // Security & Middleware
@@ -38,18 +37,27 @@ app.use('/api/auth', authRateLimiter);
 app.use('/', authRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
+app.get('/health', async (req, res) => {
+  try {
+    const health = await getDatabaseAdapter().getHealth();
+    res.status(health.connected ? 200 : 503).json({
+      status: health.status,
+      database: health.connected ? 'connected' : 'disconnected',
+      provider: health.provider
+    });
+  } catch (err: any) {
+    res.status(503).json({ status: 'error', database: 'disconnected', error: err.message });
+  }
 });
 
 // Database Connection & Server Bootstrap
 const startServer = async () => {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log(`Successfully connected to MongoDB at: ${MONGODB_URI}`);
+    const provider = getDatabaseProvider();
+    await initDatabase();
 
     const server = app.listen(PORT, () => {
-      console.log(`Backend server running on http://localhost:${PORT}`);
+      console.log(`Backend server running on http://localhost:${PORT} with [${provider.toUpperCase()}] database`);
     });
 
     server.on('error', (err: any) => {
@@ -61,7 +69,7 @@ const startServer = async () => {
       }
     });
   } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
+    console.error('Failed to connect to database:', error);
     process.exit(1);
   }
 };

@@ -1,8 +1,15 @@
 node_modules/
+**/node_modules/
 .env
 .env.*
+*.env
+**/.env
+**/.env.*
 !.env.example
+!**/.env.example
 backend/dist/
+dist/
+**/dist/
 frontend/public/bundle.js
 frontend/public/bundle.js.map
 frontend/public/bundle.css

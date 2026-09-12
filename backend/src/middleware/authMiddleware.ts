@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
+import { getDatabaseAdapter } from '../db';
 
 export const authenticateJwt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -18,7 +18,8 @@ export const authenticateJwt = async (req: Request, res: Response, next: NextFun
     }
     const decoded = jwt.verify(token, jwtSecret) as { userId: string };
 
-    const user = await User.findById(decoded.userId).select('-passwordHash');
+    const userRepo = getDatabaseAdapter().getUserRepository();
+    const user = await userRepo.findById(decoded.userId);
     if (!user) {
       res.status(401).json({ message: 'Unauthorized: User not found' });
       return;

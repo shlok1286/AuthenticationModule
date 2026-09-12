@@ -1,12 +1,38 @@
 {
   "name": "auth12",
-  "version": "1.0.0",
-  "description": "Generate a MongoDB authentication-ready React and Express project.",
+  "version": "1.1.0",
+  "description": "Generate a database-agnostic (MongoDB & PostgreSQL via Prisma) authentication-ready React and Express project.",
   "type": "module",
+  "main": "src/index.js",
   "bin": {
     "auth12": "src/index.js"
   },
-  "files": ["src", "templates", "README.md"],
+  "files": [
+    "src",
+    "templates",
+    "README.md"
+  ],
+  "keywords": [
+    "auth",
+    "authentication",
+    "mongodb",
+    "postgresql",
+    "prisma",
+    "express",
+    "react",
+    "jwt",
+    "otp",
+    "google-oauth"
+  ],
+  "author": "Shlok Piprodiya <shlokpiprodiya12@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shlok1286/AuthenticationModule.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shlok1286/AuthenticationModule/issues"
+  },
+  "homepage": "https://github.com/shlok1286/AuthenticationModule#readme",
   "engines": {
     "node": ">=18"
   },
